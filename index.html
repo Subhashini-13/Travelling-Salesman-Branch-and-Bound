@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Travelling Salesman Problem | Branch and Bound</title>
+
+<style>
+
+/* =========================
+   GLOBAL
+========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #ffffff;
+    line-height: 1.6;
+
+    background:
+        radial-gradient(circle at 10% 10%, #14532d, transparent 28%),
+        radial-gradient(circle at 90% 15%, #9a3412, transparent 28%),
+        radial-gradient(circle at 50% 100%, #166534, transparent 30%),
+        #07130d;
+}
+
+
+/* =========================
+   NAVBAR
+========================= */
+
+nav {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px 8%;
+
+    background: rgba(7, 19, 13, 0.88);
+
+    backdrop-filter: blur(15px);
+
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.logo {
+    font-size: 23px;
+    font-weight: bold;
+
+    background: linear-gradient(
+        90deg,
+        #f97316,
+        #22c55e
+    );
+
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 25px;
+}
+
+nav a {
+    color: #d1fae5;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+nav a:hover {
+    color: #fb923c;
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+    min-height: 90vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+
+    padding: 70px 8%;
+}
+
+.hero-content {
+    max-width: 1000px;
+}
+
+.badge {
+    display: inline-block;
+
+    padding: 8px 18px;
+
+    border-radius: 30px;
+
+    background: linear-gradient(
+        90deg,
+        #f97316,
+        #22c55e
+    );
+
+    font-size: 14px;
+    font-weight: bold;
+
+    margin-bottom: 25px;
+
+    box-shadow:
+        0 0 25px rgba(249,115,22,0.4);
+}
+
+.hero h1 {
+    font-size: clamp(40px, 6vw, 72px);
+
+    line-height: 1.1;
+
+    margin-bottom: 25px;
+
+    background: linear-gradient(
+        90deg,
+        #fb923c,
+        #f97316,
+        #4ade80,
+        #22c55e
+    );
+
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.hero p {
+    max-width: 800px;
+
+    margin: auto;
+
+    color: #d1fae5;
+
+    font-size: 19px;
+}
+
+.btn {
+    display: inline-block;
+
+    margin-top: 35px;
+
+    padding: 14px 30px;
+
+    border-radius: 10px;
+
+    color: white;
+
+    text-decoration: none;
+
+    font-weight: bold;
+
+    background: linear-gradient(
+        90deg,
+        #ea580c,
+        #f97316,
+        #16a34a
+    );
+
+    box-shadow:
+        0 0 30px rgba(249,115,22,0.35);
+
+    transition: 0.3s;
+}
+
+.btn:hover {
+    transform: translateY(-4px) scale(1.03);
+
+    box-shadow:
+        0 0 45px rgba(34,197,94,0.5);
+}
+
+
+/* =========================
+   SECTIONS
+========================= */
+
+section {
+    padding: 90px 9%;
+}
+
+.section-title {
+    text-align: center;
+
+    font-size: 38px;
+
+    margin-bottom: 50px;
+}
+
+.section-title span {
+    background: linear-gradient(
+        90deg,
+        #fb923c,
+        #f97316,
+        #4ade80,
+        #22c55e
+    );
+
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+
+/* =========================
+   CONTENT BOX
+========================= */
+
+.content-box {
+    max-width: 950px;
+
+    margin: auto;
+
+    padding: 40px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(34,197,94,0.10),
+            rgba(249,115,22,0.08)
+        );
+
+    border: 1px solid rgba(34,197,94,0.18);
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,0.3);
+}
+
+.content-box h3 {
+    color: #fb923c;
+
+    margin: 20px 0 10px;
+}
+
+.content-box p {
+    color: #d1fae5;
+}
+
+.formula {
+    margin: 30px 0;
+
+    padding: 22px;
+
+    text-align: center;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(249,115,22,0.15),
+            rgba(34,197,94,0.15)
+        );
+
+    border: 1px solid rgba(249,115,22,0.3);
+
+    color: #86efac;
+
+    font-size: 20px;
+}
+
+
+/* =========================
+   CARDS
+========================= */
+
+.cards {
+    max-width: 1100px;
+
+    margin: auto;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(230px, 1fr));
+
+    gap: 25px;
+}
+
+.card {
+    padding: 30px;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(34,197,94,0.10),
+            rgba(249,115,22,0.07)
+        );
+
+    border: 1px solid rgba(255,255,255,0.1);
+
+    backdrop-filter: blur(12px);
+
+    transition: 0.4s;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+
+    border-color: #f97316;
+
+    box-shadow:
+        0 15px 40px rgba(249,115,22,0.2);
+}
+
+.card h3 {
+    margin-bottom: 12px;
+
+    background: linear-gradient(
+        90deg,
+        #fb923c,
+        #4ade80
+    );
+
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.card p {
+    color: #d1fae5;
+}
+
+
+/* =========================
+   VISUALIZER
+========================= */
+
+.visualizer {
+    max-width: 1100px;
+
+    margin: auto;
+
+    text-align: center;
+}
+
+.visualizer > p {
+    color: #d1fae5;
+
+    margin-bottom: 25px;
+}
+
+.input-area {
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 12px;
+
+    flex-wrap: wrap;
+
+    margin-bottom: 35px;
+}
+
+.input-area input {
+    width: 100px;
+
+    padding: 13px;
+
+    border-radius: 9px;
+
+    border: 1px solid #166534;
+
+    background: #0b1f13;
+
+    color: white;
+
+    text-align: center;
+
+    font-size: 16px;
+
+    outline: none;
+}
+
+.input-area input:focus {
+    border-color: #f97316;
+
+    box-shadow:
+        0 0 15px rgba(249,115,22,0.4);
+}
+
+.input-area button {
+    padding: 13px 25px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    background: linear-gradient(
+        90deg,
+        #ea580c,
+        #f97316,
+        #16a34a
+    );
+
+    transition: 0.3s;
+}
+
+.input-area button:hover {
+    transform: scale(1.05);
+
+    box-shadow:
+        0 0 25px rgba(34,197,94,0.4);
+}
+
+
+/* =========================
+   GRAPH
+========================= */
+
+.graph-container {
+    position: relative;
+
+    width: min(90vw, 650px);
+
+    height: 500px;
+
+    margin: 30px auto;
+
+    border-radius: 20px;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(20,83,45,0.45),
+            rgba(2,12,7,0.96)
+        );
+
+    border: 1px solid rgba(34,197,94,0.2);
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,0.4);
+
+    overflow: hidden;
+}
+
+.city {
+    position: absolute;
+
+    width: 55px;
+    height: 55px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-weight: bold;
+
+    background: linear-gradient(
+        135deg,
+        #f97316,
+        #22c55e
+    );
+
+    border: 3px solid #ffffff;
+
+    box-shadow:
+        0 0 20px rgba(249,115,22,0.7);
+
+    z-index: 5;
+
+    transition: 0.3s;
+}
+
+.city:hover {
+    transform: translate(-50%, -50%) scale(1.15) !important;
+}
+
+.city span {
+    font-size: 15px;
+}
+
+
+/* =========================
+   ROUTE
+========================= */
+
+svg {
+    position: absolute;
+
+    width: 100%;
+    height: 100%;
+
+    top: 0;
+    left: 0;
+
+    z-index: 2;
+}
+
+.route-line {
+    stroke: #fb923c;
+
+    stroke-width: 4;
+
+    fill: none;
+
+    filter:
+        drop-shadow(0 0 8px #f97316);
+
+    stroke-linecap: round;
+
+    stroke-dasharray: 10;
+
+    animation: routeAnimation 1.5s linear infinite;
+}
+
+@keyframes routeAnimation {
+
+    to {
+        stroke-dashoffset: -20;
+    }
+
+}
+
+
+/* =========================
+   RESULT
+========================= */
+
+.result {
+    max-width: 900px;
+
+    margin: 30px auto;
+
+    padding: 25px;
+
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(249,115,22,0.12),
+            rgba(34,197,94,0.12)
+        );
+
+    border: 1px solid rgba(34,197,94,0.2);
+}
+
+.result h3 {
+    color: #fb923c;
+
+    margin-bottom: 10px;
+}
+
+.path {
+    font-size: 20px;
+
+    color: #86efac;
+
+    font-weight: bold;
+
+    word-break: break-word;
+}
+
+.cost {
+    margin-top: 10px;
+
+    font-size: 28px;
+
+    color: #fdba74;
+}
+
+
+/* =========================
+   STATS
+========================= */
+
+.stats {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 20px;
+
+    flex-wrap: wrap;
+
+    margin-top: 30px;
+}
+
+.stat {
+    min-width: 150px;
+
+    padding: 18px 25px;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(249,115,22,0.15),
+            rgba(34,197,94,0.15)
+        );
+
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.stat strong {
+    display: block;
+
+    font-size: 24px;
+
+    color: #4ade80;
+}
+
+
+/* =========================
+   CODE
+========================= */
+
+pre {
+    max-width: 950px;
+
+    margin: auto;
+
+    padding: 30px;
+
+    border-radius: 16px;
+
+    overflow-x: auto;
+
+    background: #020c07;
+
+    border: 1px solid #14532d;
+
+    color: #86efac;
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,0.4);
+
+    font-size: 15px;
+}
+
+
+/* =========================
+   COMPLEXITY
+========================= */
+
+.complexity {
+    max-width: 900px;
+
+    margin: auto;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(250px,1fr));
+
+    gap: 25px;
+}
+
+.complexity-card {
+    padding: 35px;
+
+    text-align: center;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(249,115,22,0.12),
+            rgba(34,197,94,0.12)
+        );
+
+    border: 1px solid rgba(255,255,255,0.1);
+
+    transition: 0.3s;
+}
+
+.complexity-card:hover {
+    transform: translateY(-7px);
+
+    border-color: #22c55e;
+
+    box-shadow:
+        0 15px 35px rgba(34,197,94,0.15);
+}
+
+.complexity-card h3 {
+    color: #fb923c;
+}
+
+.big {
+    margin: 15px 0;
+
+    font-size: 32px;
+
+    font-weight: bold;
+
+    background: linear-gradient(
+        90deg,
+        #fb923c,
+        #22c55e
+    );
+
+    -webkit-background-clip: text;
+
+    color: transparent;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+    text-align: center;
+
+    padding: 40px;
+
+    background: #020c07;
+
+    color: #9ca3af;
+
+    border-top: 1px solid #14532d;
+}
+
+footer span {
+    color: #fb923c;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:700px) {
+
+    nav {
+        padding: 15px 5%;
+    }
+
+    nav ul {
+        gap: 10px;
+    }
+
+    nav a {
+        font-size: 11px;
+    }
+
+    section {
+        padding: 65px 6%;
+    }
+
+    .content-box {
+        padding: 25px;
+    }
+
+    .hero h1 {
+        font-size: 43px;
+    }
+
+    .graph-container {
+        height: 420px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =========================
+     NAVIGATION
+========================= -->
+
+<nav>
+
+    <div class="logo">
+        🗺️ TSP
+    </div>
+
+    <ul>
+
+        <li>
+            <a href="#about">About</a>
+        </li>
+
+        <li>
+            <a href="#branch">Approach</a>
+        </li>
+
+        <li>
+            <a href="#visualizer">Visualizer</a>
+        </li>
+
+        <li>
+            <a href="#algorithm">Algorithm</a>
+        </li>
+
+        <li>
+            <a href="#complexity">Complexity</a>
+        </li>
+
+    </ul>
+
+</nav>
+
+
+<!-- =========================
+     HERO
+========================= -->
+
+<header class="hero">
+
+    <div class="hero-content">
+
+        <div class="badge">
+            ⚡ BRANCH AND BOUND ALGORITHM
+        </div>
+
+        <h1>
+            Travelling Salesman Problem
+        </h1>
+
+        <p>
+            Find the optimal route that visits every city
+            exactly once and returns to the starting city
+            using the Branch and Bound technique.
+        </p>
+
+        <a href="#visualizer" class="btn">
+            🗺️ Try the TSP Visualizer
+        </a>
+
+    </div>
+
+</header>
+
+
+<!-- =========================
+     ABOUT
+========================= -->
+
+<section id="about">
+
+    <h2 class="section-title">
+        What is the
+        <span>Travelling Salesman Problem?</span>
+    </h2>
+
+    <div class="content-box">
+
+        <p>
+            The Travelling Salesman Problem (TSP) is a
+            well-known optimization problem in Computer
+            Science.
+        </p>
+
+        <br>
+
+        <p>
+            Given a set of cities and the distances between
+            them, the goal is to find the shortest possible
+            route that visits every city exactly once and
+            returns to the starting city.
+        </p>
+
+        <div class="formula">
+
+            🏙️ Visit every city exactly once
+            → Return to the starting city
+            → Minimize total travel cost
+
+        </div>
+
+        <h3>
+            🎯 Objective
+        </h3>
+
+        <p>
+            Find the minimum-cost Hamiltonian cycle among
+            all possible routes.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     BRANCH AND BOUND
+========================= -->
+
+<section id="branch">
+
+    <h2 class="section-title">
+        Branch and
+        <span>Bound Approach</span>
+    </h2>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>
+                🌳 Branch
+            </h3>
+
+            <p>
+                Divide the problem into smaller possible
+                paths by selecting the next city.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                📏 Bound
+            </h3>
+
+            <p>
+                Calculate a lower bound for the possible
+                cost of each partial route.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                ✂️ Prune
+            </h3>
+
+            <p>
+                Discard paths whose estimated cost is
+                already greater than the best solution.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                🏆 Optimal Path
+            </h3>
+
+            <p>
+                Continue exploring promising paths until
+                the minimum-cost route is obtained.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     VISUALIZER
+========================= -->
+
+<section id="visualizer">
+
+    <h2 class="section-title">
+        Interactive
+        <span>TSP Visualizer</span>
+    </h2>
+
+    <div class="visualizer">
+
+        <p>
+            Select the number of cities and generate an
+            optimal travelling route.
+        </p>
+
+
+        <div class="input-area">
+
+            <label>
+                Number of Cities:
+            </label>
+
+            <input
+                type="number"
+                id="cityCount"
+                value="5"
+                min="3"
+                max="8"
+            >
+
+            <button onclick="solveTSP()">
+                🚀 Find Optimal Path
+            </button>
+
+        </div>
+
+
+        <div
+            id="graph"
+            class="graph-container">
+
+            <svg id="routeSvg"></svg>
+
+        </div>
+
+
+        <div class="stats">
+
+            <div class="stat">
+
+                <strong id="cityResult">
+                    5
+                </strong>
+
+                Cities
+
+            </div>
+
+
+            <div class="stat">
+
+                <strong id="routeCost">
+                    -
+                </strong>
+
+                Minimum Cost
+
+            </div>
+
+
+            <div class="stat">
+
+                <strong id="status">
+                    Ready
+                </strong>
+
+                Status
+
+            </div>
+
+        </div>
+
+
+        <div class="result">
+
+            <h3>
+                🏆 Optimal Route
+            </h3>
+
+            <div
+                id="route"
+                class="path">
+
+                Click "Find Optimal Path"
+
+            </div>
+
+            <div
+                id="cost"
+                class="cost">
+
+                --
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     ALGORITHM
+========================= -->
+
+<section id="algorithm">
+
+    <h2 class="section-title">
+        Branch and Bound
+        <span>Algorithm</span>
+    </h2>
+
+
+<pre>
+BranchAndBoundTSP():
+
+    Start from the first city
+
+    Generate possible next cities
+
+    Calculate the current path cost
+
+    Calculate a lower bound
+
+    If bound >= best cost:
+        Prune this branch
+
+    Otherwise:
+        Continue exploring
+
+    When all cities are visited:
+        Return to starting city
+
+    Update the best route and cost
+</pre>
+
+
+    <div class="content-box">
+
+        <h3>
+            How does it work?
+        </h3>
+
+        <p>
+            Branch and Bound explores possible routes while
+            avoiding unnecessary paths using a cost bound.
+        </p>
+
+        <br>
+
+        <p>
+            If a partial route is already more expensive
+            than the best complete route found so far,
+            that branch can be discarded.
+        </p>
+
+        <br>
+
+        <p>
+            This pruning process reduces the number of
+            routes that need to be explored compared with
+            checking every possible route.
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     KEY CONCEPTS
+========================= -->
+
+<section>
+
+    <h2 class="section-title">
+        Key <span>Concepts</span>
+    </h2>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>
+                🗺️ Hamiltonian Cycle
+            </h3>
+
+            <p>
+                A route that visits every city exactly
+                once and returns to the starting city.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                🌳 State Space Tree
+            </h3>
+
+            <p>
+                Represents the different possible routes
+                that can be explored.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                ✂️ Pruning
+            </h3>
+
+            <p>
+                Removes branches that cannot produce a
+                better solution.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                🏆 Optimization
+            </h3>
+
+            <p>
+                Finds the minimum-cost route among all
+                valid possibilities.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     COMPLEXITY
+========================= -->
+
+<section id="complexity">
+
+    <h2 class="section-title">
+        Complexity <span>Analysis</span>
+    </h2>
+
+    <div class="complexity">
+
+        <div class="complexity-card">
+
+            <h3>
+                ⏱ Worst Case Time
+            </h3>
+
+            <div class="big">
+                O(N!)
+            </div>
+
+            <p>
+                The worst case may still require exploring
+                many possible permutations.
+            </p>
+
+        </div>
+
+
+        <div class="complexity-card">
+
+            <h3>
+                💾 Space Complexity
+            </h3>
+
+            <div class="big">
+                O(N)
+            </div>
+
+            <p>
+                Recursive search requires space for the
+                current route and visited cities.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     APPLICATIONS
+========================= -->
+
+<section>
+
+    <h2 class="section-title">
+        Real-World <span>Applications</span>
+    </h2>
+
+    <div class="cards">
+
+        <div class="card">
+
+            <h3>
+                🚚 Delivery Routing
+            </h3>
+
+            <p>
+                Finding efficient routes for delivery
+                vehicles.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                ✈️ Flight Planning
+            </h3>
+
+            <p>
+                Optimizing routes between multiple
+                destinations.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                🤖 Robotics
+            </h3>
+
+            <p>
+                Planning efficient paths for autonomous
+                robots.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                📦 Logistics
+            </h3>
+
+            <p>
+                Optimizing transportation and distribution
+                routes.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer>
+
+    <p>
+        © 2026
+        <span>Travelling Salesman Problem</span>
+    </p>
+
+    <p>
+        Branch and Bound Algorithm Visualization
+    </p>
+
+</footer>
+
+
+<script>
+
+/* =========================
+   CITY POSITIONS
+========================= */
+
+const positions = [
+
+    {x: 50, y: 12},
+    {x: 82, y: 30},
+    {x: 78, y: 72},
+    {x: 50, y: 88},
+    {x: 20, y: 72},
+    {x: 15, y: 35},
+    {x: 35, y: 25},
+    {x: 65, y: 45}
+
+];
+
+
+/* =========================
+   GENERATE DISTANCE MATRIX
+========================= */
+
+function generateMatrix(n) {
+
+    let matrix =
+        Array.from(
+            {length: n},
+            () => Array(n).fill(0)
+        );
+
+
+    for(let i = 0; i < n; i++) {
+
+        for(let j = i + 1; j < n; j++) {
+
+            let distance =
+                Math.floor(
+                    Math.random() * 30
+                ) + 10;
+
+            matrix[i][j] = distance;
+
+            matrix[j][i] = distance;
+
+        }
+
+    }
+
+    return matrix;
+
+}
+
+
+/* =========================
+   TSP SOLVER
+========================= */
+
+function tsp(matrix, n) {
+
+    let visited =
+        Array(n).fill(false);
+
+    visited[0] = true;
+
+    let bestCost = Infinity;
+
+    let bestPath = [];
+
+
+    function search(
+        current,
+        count,
+        cost,
+        path
+    ) {
+
+        /*
+            Branch and Bound:
+            Stop exploring if the
+            current cost is already
+            worse than the best cost.
+        */
+
+        if(cost >= bestCost) {
+            return;
+        }
+
+
+        /*
+            All cities visited.
+        */
+
+        if(count === n) {
+
+            let finalCost =
+                cost + matrix[current][0];
+
+
+            if(finalCost < bestCost) {
+
+                bestCost = finalCost;
+
+                bestPath =
+                    [...path, 0];
+
+            }
+
+            return;
+
+        }
+
+
+        /*
+            Branch:
+            Try every unvisited city.
+        */
+
+        for(
+            let next = 1;
+            next < n;
+            next++
+        ) {
+
+            if(!visited[next]) {
+
+                visited[next] = true;
+
+
+                search(
+                    next,
+                    count + 1,
+                    cost + matrix[current][next],
+                    [...path, next]
+                );
+
+
+                /*
+                    Backtrack.
+                */
+
+                visited[next] = false;
+
+            }
+
+        }
+
+    }
+
+
+    search(
+        0,
+        1,
+        0,
+        [0]
+    );
+
+
+    return {
+        cost: bestCost,
+        path: bestPath
+    };
+
+}
+
+
+/* =========================
+   DRAW CITIES
+========================= */
+
+function drawCities(n) {
+
+    const graph =
+        document.getElementById("graph");
+
+    const svg =
+        document.getElementById("routeSvg");
+
+
+    graph
+        .querySelectorAll(".city")
+        .forEach(
+            city => city.remove()
+        );
+
+
+    svg.innerHTML = "";
+
+
+    for(
+        let i = 0;
+        i < n;
+        i++
+    ) {
+
+        const city =
+            document.createElement("div");
+
+
+        city.className = "city";
+
+
+        city.innerHTML =
+            `<span>${String.fromCharCode(65 + i)}</span>`;
+
+
+        city.style.left =
+            positions[i].x + "%";
+
+
+        city.style.top =
+            positions[i].y + "%";
+
+
+        city.style.transform =
+            "translate(-50%, -50%)";
+
+
+        graph.appendChild(city);
+
+    }
+
+}
+
+
+/* =========================
+   DRAW OPTIMAL ROUTE
+========================= */
+
+function drawRoute(path) {
+
+    const svg =
+        document.getElementById("routeSvg");
+
+
+    svg.innerHTML = "";
+
+
+    const graph =
+        document.getElementById("graph");
+
+
+    const width =
+        graph.clientWidth;
+
+
+    const height =
+        graph.clientHeight;
+
+
+    for(
+        let i = 0;
+        i < path.length - 1;
+        i++
+    ) {
+
+        const from =
+            positions[path[i]];
+
+
+        const to =
+            positions[path[i + 1]];
+
+
+        const x1 =
+            width * from.x / 100;
+
+
+        const y1 =
+            height * from.y / 100;
+
+
+        const x2 =
+            width * to.x / 100;
+
+
+        const y2 =
+            height * to.y / 100;
+
+
+        const line =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "line"
+            );
+
+
+        line.setAttribute(
+            "x1",
+            x1
+        );
+
+
+        line.setAttribute(
+            "y1",
+            y1
+        );
+
+
+        line.setAttribute(
+            "x2",
+            x2
+        );
+
+
+        line.setAttribute(
+            "y2",
+            y2
+        );
+
+
+        line.setAttribute(
+            "class",
+            "route-line"
+        );
+
+
+        svg.appendChild(line);
+
+    }
+
+}
+
+
+/* =========================
+   MAIN SOLVER
+========================= */
+
+function solveTSP() {
+
+    const input =
+        document.getElementById(
+            "cityCount"
+        );
+
+
+    const n =
+        parseInt(input.value);
+
+
+    if(
+        isNaN(n) ||
+        n < 3 ||
+        n > 8
+    ) {
+
+        alert(
+            "Please enter a value between 3 and 8."
+        );
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "status"
+    ).textContent =
+        "Solving...";
+
+
+    document.getElementById(
+        "cityResult"
+    ).textContent =
+        n;
+
+
+    drawCities(n);
+
+
+    /*
+        Generate random distances.
+    */
+
+    const matrix =
+        generateMatrix(n);
+
+
+    /*
+        Find optimal route.
+    */
+
+    const result =
+        tsp(matrix, n);
+
+
+    /*
+        Draw route.
+    */
+
+    drawRoute(
+        result.path
+    );
+
+
+    /*
+        Convert city numbers
+        into letters.
+    */
+
+    const letters =
+        result.path.map(
+            city =>
+                String.fromCharCode(
+                    65 + city
+                )
+        );
+
+
+    /*
+        Display route.
+    */
+
+    document.getElementById(
+        "route"
+    ).textContent =
+        letters.join(" → ");
+
+
+    /*
+        Display cost.
+    */
+
+    document.getElementById(
+        "cost"
+    ).textContent =
+        "Minimum Cost: " +
+        result.cost;
+
+
+    document.getElementById(
+        "routeCost"
+    ).textContent =
+        result.cost;
+
+
+    document.getElementById(
+        "status"
+    ).textContent =
+        "Optimal Path Found";
+
+}
+
+
+/* =========================
+   INITIAL DISPLAY
+========================= */
+
+drawCities(5);
+
+</script>
+
+</body>
+</html>
